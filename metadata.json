@@ -1,0 +1,7 @@
+{
+  "name": "GeoInsight Pro",
+  "description": "一个结合了SQL查询、自动地图可视化和数据画像分析的轻量级空间数据分析平台。",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
