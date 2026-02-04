@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { DataAsset, SchemaField } from '../types';
 
@@ -190,24 +191,6 @@ const DataDetailModal: React.FC<DataDetailModalProps> = ({ asset, onClose, onAna
                                 <span className="text-gray-800">{asset.updateFrequency}</span>
                             )}
                         </li>
-                        <li className="flex justify-between border-b border-gray-100 pb-1 items-center">
-                            <span>空间坐标:</span>
-                            {isEditing ? (
-                                <label className="flex items-center cursor-pointer">
-                                    <input 
-                                        type="checkbox"
-                                        checked={formData.hasGeo}
-                                        onChange={(e) => setFormData({...formData, hasGeo: e.target.checked})}
-                                        className="rounded text-blue-600 focus:ring-blue-500 mr-2"
-                                    />
-                                    <span className="text-xs">包含 Lat/Lng</span>
-                                </label>
-                            ) : (
-                                <span className={asset.hasGeo ? "text-green-600 font-bold" : "text-gray-400"}>
-                                    {asset.hasGeo ? "包含 (Lat/Lng)" : "无"}
-                                </span>
-                            )}
-                        </li>
                     </ul>
                 </div>
             </section>
@@ -216,7 +199,7 @@ const DataDetailModal: React.FC<DataDetailModalProps> = ({ asset, onClose, onAna
              <section>
                 <div className="flex justify-between items-center mb-3">
                     <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+                        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8-4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
                         数据结构 (Schema)
                     </h3>
                     {isEditing && (
