@@ -19,6 +19,7 @@ const App: React.FC = () => {
 
   // 数据状态
   const [currentAsset, setCurrentAsset] = useState<DataAsset | null>(null);
+  const [isLoadingAsset, setIsLoadingAsset] = useState(false);
   const [sql, setSql] = useState('');
   const [result, setResult] = useState<QueryResult | null>(null);
   const [isQuerying, setIsQuerying] = useState(false);
@@ -41,7 +42,6 @@ const App: React.FC = () => {
       setResult(data);
     } catch (error) {
       console.error("Query execution failed:", error);
-      // 这里可以添加一个 Toast 提示错误，目前简单处理
       setResult({
         columns: ['error'],
         rows: [{ error: '查询执行失败，请检查 SQL 语法或表名。' }],
@@ -57,7 +57,6 @@ const App: React.FC = () => {
   const geoData: GeoPoint[] = useMemo(() => {
     if (!result) return [];
     
-    // 如果有勾选，仅展示勾选的；否则展示全部（限制数量防止卡顿，地图组件内部通常需要做聚合优化，这里简单处理）
     const rowsToMap = selectedIndices.size > 0 
       ? result.rows.filter((_, idx) => selectedIndices.has(idx))
       : result.rows;
@@ -72,13 +71,29 @@ const App: React.FC = () => {
       .filter(p => !isNaN(p.lat) && !isNaN(p.lng) && p.lat !== 0 && p.lng !== 0);
   }, [result, selectedIndices]);
 
-  const handleAssetSelect = (asset: DataAsset) => {
-    setCurrentAsset(asset); 
-    setActiveView('workspace'); 
-    setWorkspaceMode('ai'); 
+  const handleAssetSelect = async (asset: DataAsset) => {
+    setIsLoadingAsset(true);
+    setActiveView('workspace');
+    
+    // 如果资产是从列表页来的，可能没有详细 schema，需要重新获取详情
+    let fullAsset = asset;
+    if (!asset.schema || asset.schema.length === 0) {
+       try {
+         const detail = await dataApiService.getDataAssetById(asset.id);
+         if (detail) {
+           fullAsset = detail;
+         }
+       } catch (e) {
+         console.error("Failed to load asset details", e);
+       }
+    }
+
+    setCurrentAsset(fullAsset);
+    setWorkspaceMode('ai');
+    setIsLoadingAsset(false);
     
     // 自动生成并执行一条预览 SQL
-    const initialSql = `SELECT * FROM ${asset.id} LIMIT 50;`;
+    const initialSql = `SELECT * FROM ${fullAsset.id} LIMIT 50;`;
     setSql(initialSql); 
     handleRunQuery(initialSql);
   };
@@ -127,8 +142,13 @@ const App: React.FC = () => {
           <header className="h-12 bg-white border-b border-gray-200 px-4 flex items-center justify-between z-20 flex-shrink-0">
             <div className="flex items-center space-x-2 text-xs font-bold text-gray-700">
                <span>当前分析:</span>
-               <span className={`px-2 py-0.5 rounded border ${currentAsset ? 'text-blue-600 bg-blue-50 border-blue-100' : 'text-gray-400 bg-gray-50 border-gray-200'}`}>
-                 {currentAsset?.name || '未选择'}
+               <span className={`px-2 py-0.5 rounded border flex items-center ${currentAsset ? 'text-blue-600 bg-blue-50 border-blue-100' : 'text-gray-400 bg-gray-50 border-gray-200'}`}>
+                 {isLoadingAsset ? (
+                   <>
+                     <svg className="animate-spin -ml-1 mr-2 h-3 w-3 text-blue-600" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                     加载中...
+                   </>
+                 ) : (currentAsset?.name || '未选择')}
                </span>
             </div>
             <div className="flex bg-gray-100 p-1 rounded-lg">

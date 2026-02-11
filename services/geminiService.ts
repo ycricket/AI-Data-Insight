@@ -1,16 +1,24 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { SAMPLE_ASSETS } from "../constants";
 import { DataAsset } from "../types";
+import { dataApiService } from "./api/dataApiService";
 
 // --- Helper Functions ---
 
-const getSchemaContext = (asset?: DataAsset) => {
+// 异步获取 Schema 上下文
+const getSchemaContext = async (asset?: DataAsset): Promise<string> => {
   if (asset) {
     return `当前操作表: ${asset.id}\n表名称: ${asset.name}\nSchema:\n${asset.schema.map(f => `- ${f.name} (${f.type}): ${f.description || ''}`).join('\n')}`;
   }
-  return SAMPLE_ASSETS.map(asset => {
-    return `ID: ${asset.id}\n名称: ${asset.name}\n分类: ${asset.category}\n描述: ${asset.description}`;
-  }).join('\n\n');
+  
+  // 如果没有指定资产，获取全量列表作为目录
+  try {
+    const assets = await dataApiService.getDataAssets();
+    return assets.map(asset => {
+      return `ID: ${asset.id}\n名称: ${asset.name}\n分类: ${asset.category}\n描述: ${asset.description}`;
+    }).join('\n\n');
+  } catch (e) {
+    return "无法获取数据目录上下文。";
+  }
 };
 
 const getAIClient = () => {
@@ -24,7 +32,7 @@ const getAIClient = () => {
 
 export const generateSqlFromText = async (userPrompt: string): Promise<string> => {
   const ai = getAIClient();
-  const schemaContext = getSchemaContext();
+  const schemaContext = await getSchemaContext(); // 默认获取目录，理想情况下应传入当前选中表，但 SQL 编辑器可能是全局的
 
   const systemInstruction = `
     你是一个空间数据分析平台的SQL专家。
@@ -64,7 +72,7 @@ export interface AnalysisResponse {
 
 export const analyzeWithChat = async (userQuery: string, currentAsset: DataAsset): Promise<AnalysisResponse> => {
   const ai = getAIClient();
-  const schemaContext = getSchemaContext(currentAsset);
+  const schemaContext = await getSchemaContext(currentAsset);
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
@@ -125,7 +133,7 @@ export const analyzeDataInsights = async (dataSample: any[]): Promise<string> =>
 
 export const consultDataAssets = async (userQuery: string): Promise<{ answer: string; recommendedIds: string[] }> => {
   const ai = getAIClient();
-  const catalogContext = getSchemaContext();
+  const catalogContext = await getSchemaContext();
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',

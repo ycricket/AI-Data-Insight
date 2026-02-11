@@ -54,6 +54,25 @@ const DataCatalog: React.FC<DataCatalogProps> = ({ onSelect, onRegister }) => {
     return assets.filter(asset => asset.category === selectedCategory);
   }, [selectedCategory, assets]);
 
+  // Handle viewing details: Open modal immediately, then fetch full details
+  const handleViewDetails = async (asset: DataAsset) => {
+    // 1. Optimistic update: show what we have
+    setViewDetailAsset(asset);
+
+    // 2. If schema is empty (meaning it's a list summary), fetch full details
+    if (!asset.schema || asset.schema.length === 0) {
+      try {
+        const fullDetail = await dataApiService.getDataAssetById(asset.id);
+        if (fullDetail) {
+          // Update the modal with full details
+          setViewDetailAsset(fullDetail);
+        }
+      } catch (error) {
+        console.error("Failed to fetch full asset details", error);
+      }
+    }
+  };
+
   const handleSend = async (text: string = inputValue) => {
     if (!text.trim() || isTyping) return;
 
@@ -154,7 +173,7 @@ const DataCatalog: React.FC<DataCatalogProps> = ({ onSelect, onRegister }) => {
                             {msg.recommendations.map(asset => (
                               <div 
                                 key={asset.id}
-                                onClick={() => setViewDetailAsset(asset)}
+                                onClick={() => handleViewDetails(asset)}
                                 className="flex-shrink-0 w-64 bg-gray-50 rounded-xl border border-gray-200 p-3 hover:border-[#0052D9] cursor-pointer transition-all group"
                               >
                                 <div className="flex items-center justify-between mb-2">
@@ -252,7 +271,7 @@ const DataCatalog: React.FC<DataCatalogProps> = ({ onSelect, onRegister }) => {
                     {filteredAssets.map((asset) => (
                       <div 
                         key={asset.id} 
-                        onClick={() => setViewDetailAsset(asset)}
+                        onClick={() => handleViewDetails(asset)}
                         className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-shadow flex flex-col h-full group cursor-pointer"
                       >
                         <div className="p-6 flex-1 flex flex-col">
