@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { QueryResult } from '../../types';
+import { QueryResult } from '../../../types';
 
 interface ResultTableProps {
   result: QueryResult | null;

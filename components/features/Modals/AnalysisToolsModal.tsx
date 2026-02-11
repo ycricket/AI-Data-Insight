@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
-import { analyzeDataInsights } from '../services/geminiService';
+import { analyzeDataInsights } from '../../../services/geminiService';
 
 interface AnalysisToolsModalProps {
   isOpen: boolean;
@@ -16,22 +16,19 @@ const AnalysisToolsModal: React.FC<AnalysisToolsModalProps> = ({ isOpen, onClose
   const [aiInsight, setAiInsight] = useState<string>('');
   const [isLoadingAi, setIsLoadingAi] = useState(false);
 
-  // Reset AI insight when data changes to ensure new queries get new analysis
+  // Reset AI insight when data changes
   useEffect(() => {
     setAiInsight('');
   }, [data]);
 
-  // Identify numeric columns
   const numericColumns = useMemo(() => {
     if (!data.length) return [];
     return columns.filter(col => {
-      // Check first few non-null rows to see if it's a number
       const validRow = data.find(row => row[col] !== null && row[col] !== undefined);
       return validRow && typeof validRow[col] === 'number';
     });
   }, [data, columns]);
 
-  // Basic Statistics
   const statistics = useMemo(() => {
     if (!data.length) return {};
     const stats: Record<string, any> = {};
@@ -44,8 +41,6 @@ const AnalysisToolsModal: React.FC<AnalysisToolsModalProps> = ({ isOpen, onClose
       const max = Math.max(...values);
       const sum = values.reduce((a, b) => a + b, 0);
       const mean = sum / values.length;
-      
-      // Std Dev
       const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length;
       const stdDev = Math.sqrt(variance);
 
@@ -54,7 +49,6 @@ const AnalysisToolsModal: React.FC<AnalysisToolsModalProps> = ({ isOpen, onClose
     return stats;
   }, [data, numericColumns]);
 
-  // Outlier Detection (Simple IQR method)
   const anomalies = useMemo(() => {
     const outliers: any[] = [];
     if (!data.length) return outliers;
@@ -72,7 +66,6 @@ const AnalysisToolsModal: React.FC<AnalysisToolsModalProps> = ({ isOpen, onClose
       data.forEach((row, idx) => {
         const val = row[col];
         if (typeof val === 'number' && (val < lowerBound || val > upperBound)) {
-           // Avoid duplicates if a row is outlier in multiple columns
            if (!outliers.find(o => o.rowIndex === idx)) {
              outliers.push({
                rowIndex: idx,
@@ -83,10 +76,9 @@ const AnalysisToolsModal: React.FC<AnalysisToolsModalProps> = ({ isOpen, onClose
         }
       });
     });
-    return outliers.slice(0, 50); // Limit to 50
+    return outliers.slice(0, 50);
   }, [data, numericColumns]);
 
-  // Generate AI Insights when tab is switched
   useEffect(() => {
     if (activeTab === 'ai' && !aiInsight && data.length > 0) {
       setIsLoadingAi(true);
@@ -237,7 +229,6 @@ const AnalysisToolsModal: React.FC<AnalysisToolsModalProps> = ({ isOpen, onClose
                           </span>
                           <span className="text-sm font-medium text-gray-900">{item.reason}</span>
                           <div className="mt-1 text-xs text-gray-500 font-mono">
-                            {/* Show a preview of the row data */}
                             {JSON.stringify(item.data).slice(0, 80)}...
                           </div>
                         </div>

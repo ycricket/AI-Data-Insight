@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { generateSqlFromText } from '../services/geminiService';
+import { generateSqlFromText } from '../../../services';
 
 interface SqlEditorProps {
   value: string;

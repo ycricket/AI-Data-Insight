@@ -1,3 +1,10 @@
+export interface SchemaField {
+  name: string;
+  type: 'string' | 'number' | 'boolean' | 'date';
+  isSensitive?: boolean; // PII or confidential
+  description?: string;
+}
+
 export interface DataAsset {
   id: string;
   name: string;
@@ -12,24 +19,11 @@ export interface DataAsset {
   coverage?: string; // Geographic coverage
 }
 
-export interface SchemaField {
-  name: string;
-  type: 'string' | 'number' | 'boolean' | 'date';
-  isSensitive?: boolean; // PII or confidential
-  description?: string;
-}
-
 export interface QueryResult {
   columns: string[];
   rows: any[];
   executionTime: number;
   totalRows: number;
-}
-
-export enum ViewMode {
-  SPLIT = 'SPLIT',
-  TABLE_ONLY = 'TABLE_ONLY',
-  MAP_ONLY = 'MAP_ONLY'
 }
 
 export interface GeoPoint {

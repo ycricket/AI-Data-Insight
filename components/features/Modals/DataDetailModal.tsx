@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { DataAsset, SchemaField } from '../types';
+import { DataAsset } from '../../../types';
 
 interface DataDetailModalProps {
   asset: DataAsset | null;
@@ -15,7 +14,7 @@ const DataDetailModal: React.FC<DataDetailModalProps> = ({ asset, onClose, onAna
 
   useEffect(() => {
     if (asset) {
-      setFormData(JSON.parse(JSON.stringify(asset))); // Deep copy to prevent mutating props directly
+      setFormData(JSON.parse(JSON.stringify(asset))); // Deep copy
     }
   }, [asset]);
 

@@ -1,9 +1,9 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { SAMPLE_ASSETS } from "../constants";
 import { DataAsset } from "../types";
 
-// Helper to format schema for the prompt
+// --- Helper Functions ---
+
 const getSchemaContext = (asset?: DataAsset) => {
   if (asset) {
     return `当前操作表: ${asset.id}\n表名称: ${asset.name}\nSchema:\n${asset.schema.map(f => `- ${f.name} (${f.type}): ${f.description || ''}`).join('\n')}`;
@@ -13,12 +13,17 @@ const getSchemaContext = (asset?: DataAsset) => {
   }).join('\n\n');
 };
 
-export const generateSqlFromText = async (userPrompt: string): Promise<string> => {
+const getAIClient = () => {
   if (!process.env.API_KEY) {
     throw new Error("环境变量中未找到 API Key。");
   }
+  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+};
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// --- Core AI Functions ---
+
+export const generateSqlFromText = async (userPrompt: string): Promise<string> => {
+  const ai = getAIClient();
   const schemaContext = getSchemaContext();
 
   const systemInstruction = `
@@ -58,9 +63,7 @@ export interface AnalysisResponse {
 }
 
 export const analyzeWithChat = async (userQuery: string, currentAsset: DataAsset): Promise<AnalysisResponse> => {
-  if (!process.env.API_KEY) throw new Error("缺少 API Key");
-
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = getAIClient();
   const schemaContext = getSchemaContext(currentAsset);
 
   const response = await ai.models.generateContent({
@@ -101,10 +104,12 @@ export const analyzeWithChat = async (userQuery: string, currentAsset: DataAsset
   }
 };
 
+// Compatibility alias for old code
+export const analyzeDataIntent = analyzeWithChat;
+
 export const analyzeDataInsights = async (dataSample: any[]): Promise<string> => {
-  if (!process.env.API_KEY) return "缺少 API Key。";
-  
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = getAIClient();
+  // Limit sample size to avoid token limits
   const sampleStr = JSON.stringify(dataSample.slice(0, 10));
 
   try {
@@ -119,9 +124,7 @@ export const analyzeDataInsights = async (dataSample: any[]): Promise<string> =>
 };
 
 export const consultDataAssets = async (userQuery: string): Promise<{ answer: string; recommendedIds: string[] }> => {
-  if (!process.env.API_KEY) throw new Error("缺少 API Key");
-
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = getAIClient();
   const catalogContext = getSchemaContext();
 
   const response = await ai.models.generateContent({
@@ -162,3 +165,6 @@ export const consultDataAssets = async (userQuery: string): Promise<{ answer: st
     return { answer: "抱歉，解析建议时出现错误。", recommendedIds: [] };
   }
 };
+
+// Compatibility alias
+export const consultCatalog = consultDataAssets;

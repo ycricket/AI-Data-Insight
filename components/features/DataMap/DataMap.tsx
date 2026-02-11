@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as L from 'leaflet';
-import { GeoPoint } from '../types';
+import { GeoPoint } from '../../../types';
 
 // Fix Leaflet's default icon path issues
 const DefaultIcon = L.icon({
@@ -50,7 +50,7 @@ const DataMap: React.FC<DataMapProps> = ({ data, hoveredRowId, onMarkerClick }) 
     }
 
     return () => {
-      // Cleanup on unmount if needed, though usually keeping the instance is fine for this app lifecycle
+      // Cleanup on unmount if needed
     };
   }, []);
 
@@ -112,15 +112,12 @@ const DataMap: React.FC<DataMapProps> = ({ data, hoveredRowId, onMarkerClick }) 
       // Highlight target
       marker.setIcon(ActiveIcon);
       marker.openPopup();
-      // Optional: Pan to marker if desired, but might be too jumpy
-      // mapInstanceRef.current?.panTo(marker.getLatLng());
     }
   }, [hoveredRowId]);
 
   return (
     <div className="w-full h-full relative">
       <div ref={mapContainerRef} className="w-full h-full z-0" />
-      {/* Legend / Layer Control could go here */}
       <div className="absolute bottom-4 right-4 bg-white p-2 rounded shadow z-[1000] text-xs">
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-blue-500 block"></span>
